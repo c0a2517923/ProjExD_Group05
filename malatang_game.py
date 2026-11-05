@@ -51,6 +51,7 @@ def main():
 
     clock = pg.time.Clock()
 
+    
     while True: 
 
         for event in pg.event.get():    # ×ボタンでウィンドウを閉じる
