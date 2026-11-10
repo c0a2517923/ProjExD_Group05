@@ -784,8 +784,10 @@ def main():
             pg.display.update() # 画面更新
 
         if is_restart:
+            pg.mixer.music.stop()  # 現在流れているBGMをストップ
             continue  # 外側のループの先頭に戻る（＝リスタート）
         else:
+            pg.mixer.music.stop()  # 現在流れているBGMをストップ
             return 0  # main関数を終了する（＝Escが押されたか、×で閉じられた）
 
     
