@@ -687,19 +687,19 @@ def main():
                             select_spice
                         )
                                 
-                        # 動作確認用
-                        print(f"注文具材：{order_list}")
-                        print(f"注文辛さ：{order_spice}")
-                        print(f"選択具材：{select_list}")
-                        print(f"選択辛さ：{select_spice}")
-                        print(f"判定：{result}")
+                        # # 動作確認用
+                        # print(f"注文具材：{order_list}")
+                        # print(f"注文辛さ：{order_spice}")
+                        # print(f"選択具材：{select_list}")
+                        # print(f"選択辛さ：{select_spice}")
+                        # print(f"判定：{result}")
                                         
                         if result:
-                            print("注文成功！")
+                            # print("注文成功！")
                             # 正解で1000点
                             score.value += 1000
                         else:
-                            print("注文失敗")
+                            # print("注文失敗")
                             life.num -= 1  # 注文を間違えたら残機を1減らす
 
                         # 商品選択をリセット
