@@ -585,6 +585,10 @@ def main():
     table_img = pg.transform.scale(table_img, (WIDTH*1.1, HEIGHT))  # 画像のサイズ変更
     
     while True:
+        # BGMの再生
+        pg.mixer.music.stop()  # 現在流れているBGMをストップ
+        pg.mixer.music.load("sound/contedefees_0177.mp3")  # ダウンロードした音源ファイルをロード
+        pg.mixer.music.play(-1)  # ループ再生
 
         life = Life(3)   # 初期残機数を3に設定
         toppings_dict = {
