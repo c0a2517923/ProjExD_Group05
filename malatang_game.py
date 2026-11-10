@@ -93,8 +93,8 @@ def gameover(screen: pg.Surface, score: int) -> bool:
     pg.mixer.music.load("sound/hotaru.mp3")  # ダウンロードした音源ファイルをロード
     pg.mixer.music.play(-1)  # ループ再生
 
-    margin_x = 150
-    margin_y = 100
+    margin_x = 100
+    margin_y = 50
 
     dialog_w = WIDTH - (margin_x * 2)
     dialog_h = HEIGHT - (margin_y * 2)
@@ -103,23 +103,24 @@ def gameover(screen: pg.Surface, score: int) -> bool:
     pg.draw.rect(gameover_screen, (0, 0, 0), pg.Rect(0, 0, WIDTH, HEIGHT))  # 黒い矩形を作る
     gameover_screen.set_alpha(210)  # 透明度の調節
 
-    fonto = pg.font.Font(FONT_PATH, 80)
-    font_small = pg.font.Font(FONT_PATH, 40)
+    fonto_go = pg.font.Font(FONT_PATH, 100)
+    fonto_sc = pg.font.Font(FONT_PATH, 80)
+    font_gu = pg.font.Font(FONT_PATH, 40)
     
     # "Game Over"の白文字を作る (少し上に配置)
-    txt = fonto.render("Game Over", True, (255, 255, 255)) 
+    txt = fonto_go.render("Game Over", True, (255, 255, 255)) 
     txt_rect = txt.get_rect()
-    txt_rect.center = dialog_w / 2, dialog_h / 2 - 80  # 中心から上に80ピクセルずらす
+    txt_rect.center = dialog_w / 2, dialog_h / 2 - 100  # 中心から上に80ピクセルずらす
     gameover_screen.blit(txt, txt_rect)
 
     # スコアの白文字を作る (少し下に配置)
-    score_txt = fonto.render(f"Score: {score}", True, (255, 255, 255))
+    score_txt = fonto_sc.render(f"Score: {score}", True, (255, 255, 255))
     score_rect = score_txt.get_rect()
     score_rect.center = dialog_w / 2, dialog_h / 2  # 中心から下に50ピクセルずらす
     gameover_screen.blit(score_txt, score_rect)
 
     # 画面に操作案内を追加
-    guide_txt = font_small.render("Press ENTER to Restart / ESC to Exit", True, (200, 200, 200))
+    guide_txt = font_gu.render("Press ENTER to Restart / ESC to Exit", True, (200, 200, 200))
     guide_rect = guide_txt.get_rect()
     guide_rect.center = dialog_w / 2, dialog_h / 2 + 80
     gameover_screen.blit(guide_txt, guide_rect)
