@@ -108,18 +108,18 @@ class Customer(pg.sprite.Group):
             text_rct = text_surface.get_rect()
             text_rct.topleft = (x,y)
             screen.blit(text_surface, text_rct)
-            
+
             y += y_space
 
             # 具材アイコンの表示(画像サイズ変える)
 
-            # if i < len(order_img):
-            #     img_surface = pg.image.load(order_img[i])
-            #     img_surface = pg.transform.scale(img_surface, (100,75))  # 画像のサイズ変更
-            #     img_rct = img_surface.get_rect()
-            #     img_rct.left = text_rct.right+10
-            #     img_rct.centery = text_rct.centery
-            #     screen.blit(img_surface, img_rct)
+            if i < len(order_img):
+                img_surface = pg.image.load(order_img[i])
+                img_surface = pg.transform.scale(img_surface, (100,75))  # 画像のサイズ変更
+                img_rct = img_surface.get_rect()
+                img_rct.left = text_rct.right+10
+                img_rct.centery = text_rct.centery
+                screen.blit(img_surface, img_rct)
 
 class Order():
     """
@@ -205,7 +205,7 @@ class Bowl(pg.sprite.Group):
         辛さのレベルとどんぶりの画像を変えるメソッド
         """
         self.spice_img = next(self.spice_iter)
-        self.img = pg.transform.scale(pg.image.load( next(self.spice_img) ),(350,250))
+        self.img = pg.transform.scale(pg.image.load( self.spice_img ),(350,250))
 
     def get_spicelevel(self):
         """
