@@ -25,7 +25,7 @@ class Time:
         self.time_limit = 60 # 1日の制限時間(秒)
         self.nokori = self.time_limit # 残り時間
         self.owari = False # 時間切れかどうか
-        self.font = pg.font.Font("DotGothic16-Regular.ttf", 40) # 表示する文字の設定
+        self.font = pg.font.Font("fig/DotGothic16-Regular.ttf", 40) # 表示する文字の設定
 
     def update(self, dt):
         """
@@ -69,18 +69,83 @@ class Time:
         引数：screen（描画先のSurface）
         戻り値：なし
         """
+
+        # 半透明の黒い背景を作成
+        bg = pg.Surface((390, 120), pg.SRCALPHA)
+        pg.draw.rect(bg, (0, 0, 0), (0, 0, 390, 120), border_radius=20)
+        bg.set_alpha(150)
+        screen.blit(bg, (20, 15))
+
+        # 日数を表示
         day_img = self.font.render(
             f"{self.day}日目", True, (255, 255, 255)
         )
 
+        # 残り時間の表示
         time_img = self.font.render(
-            f"残り時間：{math.ceil(self.remaining)}秒",
+            f"残り時間：{math.ceil(self.nokori)}秒",
             True, (255, 255, 255)
         )
 
         screen.blit(day_img, (30, 20))
         screen.blit(time_img, (30, 65))
-    
+
+
+class Help:
+    """
+    ゲームの操作方法を表示するクラス
+    """
+
+    def __init__(self):
+        """
+        引数：なし
+        戻り値：なし
+        """
+        self.show = False  # 操作方法を表示するかどうか
+        self.font = pg.font.Font("fig/DotGothic16-Regular.ttf", 30)  # 操作説明
+        self.title_font = pg.font.Font("fig/DotGothic16-Regular.ttf", 45)  # 操作説明タイトル
+
+    def toggle(self):
+        """
+        操作方法の表示・非表示を切り替えるメソッド
+        引数：なし
+        戻り値：なし
+        """
+        self.show = not self.show
+
+    def draw(self, screen):
+        """
+        操作方法を表示させるメソッド
+        引数：screen(描画先のSurface)
+        戻り値：なし
+        """
+        if not self.show:
+            return
+
+        # 半透明の黒い背景画面
+        overlay = pg.Surface((WIDTH, HEIGHT))
+        overlay.fill((0, 0, 0))
+        overlay.set_alpha(200)
+        screen.blit(overlay, (0, 0))
+
+        # タイトルを表示
+        title = self.title_font.render(
+            "操作方法", True, (255, 255, 255)
+        )
+        screen.blit(title, (450, 100))
+
+        # 操作説明
+        texts = [
+            "数字キー・クリック：具材を選択する",
+            "上下キー：辛さを変更する(3段階)",
+            "Qキー：操作方法を開く・閉じる"
+        ]
+
+        for i, text in enumerate(texts):
+            img = self.font.render(
+                text, True, (255, 255, 255)
+            )
+            screen.blit(img, (300, 220 + i * 65))
 
 # ----- クラスここまで ------
 
@@ -96,8 +161,9 @@ def main():
     clock = pg.time.Clock()
 
     timer = Time() # タイマーを作成
+    help_screen = Help()  # 操作方法を作成
     
-    font = pg.font.Font("DotGothic16-Regular.ttf", 40)
+    font = pg.font.Font("fig/DotGothic16-Regular.ttf", 40)
 
     while True: 
 
@@ -107,15 +173,43 @@ def main():
             if event.type == pg.QUIT:
                 return 0
 
-        if event.key == pg.K_RETURN and timer.owari:
-            timer.next_day()
+            if event.type == pg.KEYDOWN:
+                # Qキーで操作方法の表示・非表示を切り替える
+                if event.key == pg.K_q:
+                    help_screen.toggle()
 
+                # 時間切れの場合はEnterキーで次の日に進む
+                if event.key == pg.K_RETURN and timer.owari:
+                    if not help_screen.show:
+                        timer.next_day()
 
-        screen.blit(bg_img, [0, 0]) # 画面表示
+        # 操作方法が表示していない時だけ時間を進める
+        time_up = False
 
+        if not help_screen.show:
+            time_up = timer.update(dt)
+
+        if time_up:
+            print("時間切れ!")
+
+        # 背景を表示
+        screen.blit(bg_img, (0, 0))
+
+        # 残り時間と日数を表示
+        timer.draw(screen)
+
+        # 時間切れの時メッセージを表示
+        if timer.owari:
+            img = font.render(
+                "営業終了!Enterで次の日へ",
+                True, (255, 255, 255)
+            )
+            screen.blit(img, (220, 300))
+
+        # 操作説明を表示(最後に描画する)
+        help_screen.draw(screen)
 
         pg.display.update() # 画面更新
-        clock.tick(50)
 
 # 呪文
 if __name__ == "__main__":
