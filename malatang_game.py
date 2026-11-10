@@ -18,7 +18,8 @@ class Time:
 
     def __init__(self):
         """
-        引数：time_limit (1日の制限時間、秒)
+        時間管理に必要な属性を初期化する。
+        引数：なし
         戻り値：なし
         """
         self.day = 1 # 現在の日数
@@ -27,7 +28,7 @@ class Time:
         self.owari = False # 時間切れかどうか
         self.font = pg.font.Font("fig/DotGothic16-Regular.ttf", 40) # 表示する文字の設定
 
-    def update(self, dt):
+    def update(self, dt: float) -> bool:
         """
         経過時間に応じて残り時間を減らすメソッド
         引数：dt (前のフレームからの経過時間、秒)
@@ -55,7 +56,7 @@ class Time:
         self.nokori = self.time_limit
         self.owari = False
 
-    def get_customer_count(self):
+    def get_customer_count(self) -> int:
         """
         日数に応じたお客さんの人数を取得するメソッド
         引数：なし
