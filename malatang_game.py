@@ -13,6 +13,74 @@ HEIGHT = 650  # ゲームウィンドウの高さ
 FONT_PATH = f"DotGothic16/DotGothic16-Regular.ttf"  # ドット風フォント
 
 # ---- クラス ------
+class Goods(pg.sprite.Sprite):
+    """
+    商品棚に表示する具材を管理するクラス
+    """
+    # 商品とパスを対応させる辞書
+    goods_dic = {"春雨":"fig/harusame.png",
+                 "チンゲン菜":"fig/tingensai.png",
+                 "豚肉":"fig/niku.png",
+                 "キクラゲ":"fig/kikurage.png",
+                 "サーカス団子":"fig/sakasudango.png"}
+    
+    def __init__(self, name:str, xy:tuple[int,int]):
+        """
+        商品画像を生成する
+        引数1 name：商品名
+        引数2 xy：商品の表示する位置
+        """
+        super().__init__()
+        # 商品名保存
+        self.name = name
+        # 商品名に対応する画像を読み込む
+        self.image = pg.image.load(__class__.goods_dic[name]).convert_alpha()
+        # 商品画像のサイズを小さく
+        self.image = pg.transform.scale(self.image,(140, 100))
+        # 商品画像のRectを取得する
+        self.rect = self.image.get_rect()
+        # 商品の表示位置を設定
+        self.rect.center = xy
+
+        # 商品した商品の個数を管理
+        self.count = 0
+
+    def select(self, select_list: list[str]):
+        """
+        商品を選択してselect_listに商品を追加する
+        引数 select_list:
+        プレイヤーが選択した商品を保存するリスト
+        """
+        # 商品を1つ追加する
+        # 選択した商品をリストへ追加
+        select_list.append(self.name)
+
+        # 選択個数を1増やす
+        self.count += 1
+
+        print(f"{self.name} × {self.count}")
+        print(f"現在の選択：{select_list}")
+
+    def deselect(self, select_list: list[str]):
+        """
+        商品を1個選択解除する
+        """
+        # 1個以上選択されている場合だけ減らす
+        if self.count > 0:
+
+            select_list.remove(self.name)
+
+            self.count -= 1
+
+            print(f"{self.name} × {self.count}")
+            print(f"現在の選択：{select_list}")
+
+    def reset(self):
+        """
+        商品の選択状態を解除する
+        """
+        self.count = 0
+        
 
 def gameover(screen: pg.Surface, score: int) -> bool:
     """
@@ -91,6 +159,7 @@ class Life:
             for i in range(self.num):  # 残基数の分だけ繰り返す
                 # ハートを画面の左上から50ピクセル間隔で描画
                 screen.blit(self.image, (30+50*i, 70))
+
 class Customer(pg.sprite.Group):
     """
     お客さんに関するクラス
@@ -240,7 +309,7 @@ class Order():
         """
         注文の辛さを取得
         """
-        return self.my_spices.copy()
+        return self.my_spices
 
     def get_text(self):
         """
@@ -265,8 +334,9 @@ class Bowl(pg.sprite.Group):
     def __init__(self, *sprites, spices_dict:dict):
         super().__init__(*sprites)
         self.spices_dict = spices_dict
-        self.spice_iter = iter(spices_dict.keys())
-        self.spice_key = next(self.spice_iter)
+        self.spice_keys = list(spices_dict.keys())
+        self.spice_index = 0
+        self.spice_key = (self.spice_keys[self.spice_index])
         self.img = pg.transform.scale(pg.image.load( self.spice_key ),(350,250))
 
     def draw(self,screen):
@@ -281,14 +351,15 @@ class Bowl(pg.sprite.Group):
         """
         辛さのレベルとどんぶりの画像を変えるメソッド
         """
-        self.spice_img = next(self.spice_iter)
-        self.img = pg.transform.scale(pg.image.load( self.spice_img ),(350,250))
+        self.spice_index = ( self.spice_index + 1) % len(self.spice_keys)
+        self.spice_key = (self.spice_keys[self.spice_index])
+        self.img = pg.transform.scale(pg.image.load(self.spice_key),(350, 250))
 
     def get_spicelevel(self):
         """
         現在の辛さのレベル名(中辛など)を返す
         """
-        return self.spices_dict[ self.spice_key ].copy()
+        return self.spices_dict[ self.spice_key ]
         
 
 class Score:
@@ -314,6 +385,39 @@ class Score:
         """
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
+        
+
+# 注文内容の正誤判定
+def check_order(order_list: list[str], select_list: list[str],order_spice: str, select_spice: str) -> bool:
+    """
+    具材と辛さが両方一致しているか判定
+    完全一致：True
+    不一致：False
+    引数1 order_list：お客さんが注文した具材のリスト
+    引数2 select_list：プレイヤーが選択した具材のリスト
+    """
+    # 具材の種類・個数を判定
+    goods_result = (sorted(order_list) == sorted(select_list))
+
+    # 辛さを判定
+    spice_result = (order_spice == select_spice)
+
+    # 両方正解ならTrue
+    return goods_result and spice_result
+
+# 商品の選択状態をリセットする関数
+def reset_goods(goods: pg.sprite.Group, select_list: list[str]):
+    """
+    選択した商品の情報をすべてリセットする
+    引数1 goods： 商品を管理しているGroup
+    引数2 select_list：選択した商品を保存しているリスト
+    """
+    #選択した商品リストを空にする
+    select_list.clear()
+
+    # 全商品のselectedをFalseに戻す
+    for good in goods:
+        good.reset()
 
 # ----- クラスここまで ------
 
@@ -327,11 +431,10 @@ def main():
     bg_img = pg.transform.scale(bg_img, (WIDTH, HEIGHT))  # 画像のサイズ変更
     table_img = pg.image.load(f"fig/table.png")
     table_img = pg.transform.scale(table_img, (WIDTH*1.1, HEIGHT))  # 画像のサイズ変更
-    score = 0
     
     while True:
 
-        life = Life(0)   # 初期残機数を3に設定
+        life = Life(3)   # 初期残機数を3に設定
         toppings_dict = {
             f"fig/harusame.png":"春雨",
             f"fig/kikurage.png":"キクラゲ",
@@ -353,9 +456,32 @@ def main():
             )
 
         score = Score()
-        life = Life(0)   # 初期残機数を3に設定
+        life = Life(3)   # 初期残機数を3に設定
         clock = pg.time.Clock()
-        
+
+        # 商品の作成
+        # 商品棚に商品を追加 引数(位置)を商品関数に渡す
+        goods_list = [
+            Goods("春雨", (150, 550)),
+            Goods("チンゲン菜", (350, 550)),
+            Goods("豚肉", (550, 550)),
+            Goods("キクラゲ", (750, 550)),
+            Goods("サーカス団子", (950, 550))
+        ]
+    
+        # 商品をまとめて管理するGroup
+        goods = pg.sprite.Group(goods_list)
+    
+        # プレイヤーが選択した商品
+        select_list = []
+
+        # プレイヤーがオーダーした商品
+        order_list = customer.order.get_order()
+
+        # Customer担当と統合したら削除し、Customer側のorder_listを使用する
+        # 数字キーと商品の対応
+        key_dic = {pg.K_1: 0, pg.K_2: 1, pg.K_3: 2, pg.K_4: 3, pg.K_5: 4}
+
         is_restart = False  # リスタートするかどうかを記録する変数
 
         while True: 
@@ -363,32 +489,113 @@ def main():
             for event in pg.event.get():    # ×ボタンでウィンドウを閉じる
                 if event.type == pg.QUIT:
                     return 0
+                 # 数字キーによる商品選択
+                if event.type == pg.KEYDOWN:
+                    # 1～5キーが押された場合、対応する商品番号を取得
+                    if event.key in key_dic:
+                        index = key_dic[event.key]
+                        # 商品を選択
+                        goods_list[index].select(select_list)
+                    
+                    # Bowl側の辛さ変更
+                    if event.key == pg.K_UP:
+
+                        customer.bowl.increase_sprice()
+                    # ENTERキーで注文内容を判定
+                    if event.key == pg.K_RETURN:
+                        # 注文された具材
+                        order_list = (customer.order.get_order())
+
+                        # 注文された辛さ
+                        order_spice = (customer.order.get_spiceslevel())
+                        # プレイヤーが選択した辛さ
+                        select_spice = (customer.bowl.get_spicelevel())
+
+                        # 具材＋辛さを判定
+                        result = check_order(
+                            order_list,
+                            select_list,
+                            order_spice,
+                            select_spice
+                        )
+                                
+                        # 動作確認用
+                        print(f"注文具材：{order_list}")
+                        print(f"注文辛さ：{order_spice}")
+                        print(f"選択具材：{select_list}")
+                        print(f"選択辛さ：{select_spice}")
+                        print(f"判定：{result}")
+                                        
+                        if result:
+                            print("注文成功！")
+                            # 正解で1000点
+                            score.value += 1000
+                        else:
+                            print("注文失敗")
+
+                        # 商品選択をリセット
+                        reset_goods(goods,select_list)
+
+                        customer = Customer(toppings_dict=toppings_dict, spices_dict=spices_dict, max=5)
+
+                        # 次の注文を取得
+                        order_list = (customer.order.get_order())
+
+                # マウスクリックによる商品選択
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    mouse_pos = event.pos
+
+                    for good in goods:
+                        if good.rect.collidepoint(mouse_pos):
+                            # 左クリック → 1個追加
+                            if event.button == 1:
+                                good.select(select_list)
+                            # 右クリック → 1個減らす
+                            elif event.button == 3:
+                                good.deselect(select_list)
+
+                        
                 
             screen.blit(bg_img, [0, 0]) # 画面表示
             customer.draw(screen)
             screen.blit(table_img,[-55,HEIGHT/3])
             customer.bowl.draw(screen)
 
+            # 商品をまとめて表示
+            goods.draw(screen)
 
+            # 選択した商品が分かるように枠を表示
+            for good in goods:
+                # 1個以上選択されている場合
+                if good.count > 0:
+
+                    # 商品の周囲に赤枠を表示
+                    pg.draw.rect(screen,(255, 0, 0),good.rect,4)
+
+                    # 2個以上の場合だけ「×2」「×3」などを表示
+                    if good.count >= 2:
+                        count_font = pg.font.Font(FONT_PATH,28)
+                        count_txt = count_font.render(f"×{good.count}", True,(255, 0, 0))
+                        count_rect = count_txt.get_rect()
+
+                        # 商品画像の下に表示
+                        count_rect.midtop = (good.rect.centerx,good.rect.bottom + 5)
+                        screen.blit(count_txt,count_rect)
 
             life.update(screen)  #　残機数分のハートを表示
+            score.update(screen) # Score表示
+
             if life.num <= 0:
                 is_restart = gameover(screen, score.value)
                 break
 
-            score.update(screen)
-
             pg.display.update() # 画面更新
             clock.tick(50)
 
-        if is_restart == True:
-                continue  # 外側のループの先頭に戻る（＝リスタート）
+        if is_restart:
+            continue  # 外側のループの先頭に戻る（＝リスタート）
         else:
             return 0  # main関数を終了する（＝Escが押されたか、×で閉じられた）
-        screen.blit(bg_img, [0, 0]) # 画面表示
-
-        pg.display.update() # 画面更新
-        clock.tick(50)
 
 # 呪文
 if __name__ == "__main__":
